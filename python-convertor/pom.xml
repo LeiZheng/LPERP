@@ -4,8 +4,25 @@
   <artifactId>python-convertor</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>Convertor Tools to resue python code of openerp</name>
+  <properties>
+  	<downloadSources>true</downloadSources>
+  	<downloadDocs>true</downloadDocs>
+  </properties>
   <build>
 	<plugins>
+		<plugin>
+	        <groupId>org.antlr</groupId>
+	        <artifactId>antlr4-maven-plugin</artifactId>
+	        <version>4.3</version>
+	        <executions>
+	          <execution>
+	            <id>antlr</id>
+	            <goals>
+	              <goal>antlr4</goal>
+	            </goals>
+	          </execution>
+	        </executions>
+	      </plugin>
           <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-compiler-plugin</artifactId>
@@ -17,4 +34,11 @@
           </plugin>            
       </plugins>
   </build>   
+  <dependencies>
+	<dependency>
+		<groupId>org.antlr</groupId>
+		<artifactId>antlr4-runtime</artifactId>
+		<version>4.3</version>
+	</dependency>  
+  </dependencies>
 </project>

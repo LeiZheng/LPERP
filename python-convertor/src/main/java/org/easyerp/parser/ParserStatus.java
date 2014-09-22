@@ -1,4 +1,4 @@
-package org.easyerp.io;
+package org.easyerp.parser;
 
 public enum ParserStatus {
  
