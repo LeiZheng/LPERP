@@ -4,33 +4,25 @@
 
 grammar JSON;
 
-SKIP
- : ( SPACES | COMMENT | LINE_JOINING ) -> skip
- ;
- 
-COMMENT
- : '#' ~[\r\n]*
- ;
-
 json:   object
     |   array
     ;
 
 object
-    :   '{' pair (',' pair)* '}'
+    :   '{' (pair ',')* '}'
     |   '{' '}' // empty object
     ;
     
 pair:   STRING ':' value ;
 
 array
-    :   '[' value (',' value)* ']'
+    :   '[' (value ',')* value? ']'
     |   '[' ']' // empty array
     ;
 
 value
     :   STRING
-    |   LONG_STRING
+    |   LONGSTRING
     |   NUMBER
     |   object  // recursion
     |   array   // recursion
@@ -38,26 +30,13 @@ value
     |   'false'
     |   'null'
     ;
+LONGSTRING: '"""' (~'\\' | '\\')*   '"""' 
+			| '\'\'\'' (~'\\' | '\\')* '\'\'\''
+			;
+STRING :  '"' (ESC | ~["\\])* '"' 
+		| '\'' (ESC | ~['\\])* '\''
+		;
 
-STRING :  '"' (ESC | ~["\\])* '"' ;
-
-LONG_STRING
- : '\'\'\'' LONG_STRING_ITEM*? '\'\'\''
- | '"""' LONG_STRING_ITEM*? '"""'
- ;
-
-fragment LONG_STRING_ITEM
- : LONG_STRING_CHAR
- | STRING_ESCAPE_SEQ
- ;
-
-fragment LONG_STRING_CHAR
- : ~'\\'
- ;
-
-fragment STRING_ESCAPE_SEQ
- : '\\' .
- ;
 fragment ESC :   '\\' (["\\/bfnrt] | UNICODE) ;
 fragment UNICODE : 'u' HEX HEX HEX HEX ;
 fragment HEX : [0-9a-fA-F] ;
