@@ -18,6 +18,6 @@ public class JsonFileParser {
 		System.out.println("new line: " + tree.getText() + " : " + tree.getChildCount());
 		for(int i = 0; i < tree.getChildCount(); i ++) {
 			print(tree.getChild(i));
-		}
+		} 
 	}
 }
