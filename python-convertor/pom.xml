@@ -15,7 +15,7 @@
 	        <artifactId>antlr4-maven-plugin</artifactId>
 	        <version>4.3</version>
 	        <executions>
-	          <execution>
+	          <execution>  
 	            <id>antlr</id>
 	            <goals>
 	              <goal>antlr4</goal>
