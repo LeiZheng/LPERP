@@ -16,5 +16,4 @@ public class JsonFileParserTest {
 		Map<String, Object> jsonObject = parser.parsePythonJson("__openerp__.py");
 		logger.info("" + jsonObject);
 	}
-
 }

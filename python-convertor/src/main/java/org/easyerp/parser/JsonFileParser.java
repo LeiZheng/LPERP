@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.ANTLRFileStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
@@ -27,7 +28,7 @@ public class JsonFileParser {
 	public Map<String, Object> parsePythonJson(String filename) throws RecognitionException, Exception {
 		JSONLexer lexer = new JSONLexer(new ANTLRFileStream(JsonFileParser.class.getClassLoader().getResource(filename).getFile()));
 		JSONParser parser = new JSONParser(new CommonTokenStream(lexer));
-		return (Map<String, Object>)parseToMap(parser.json());
+		return (Map<String, Object>)parseToObject(parser.json());
 		
 	}
 
@@ -38,9 +39,8 @@ public class JsonFileParser {
 		} 
 	}
 	
-	private Object parseToMap(ParseTree root) throws Exception {
-		Object parsedObject = null;
-		
+	private Object parseToObject(ParseTree root) throws Exception {
+		Object parsedObject = null;			
 		if(root instanceof ObjectContext) {
 			//iterator all pair context for object context
 			Map<String, Object> parsedMap = new HashMap<String, Object>();
@@ -48,30 +48,32 @@ public class JsonFileParser {
 				ParseTree childNode = root.getChild(i);
 				if(childNode instanceof PairContext) {
 					PairContext context = (PairContext)childNode;
-					parsedMap.put(context.STRING().getText(), parseToMap(context.value()));
+					String name = context.STRING().getText();
+					parsedMap.put(name.substring(1,name.length() - 1), parseToObject(context.value()));
 				}
 			}
 			parsedObject = parsedMap;
 		} else if(root instanceof JsonContext) {//the parse tree begin at JsonContext, it should only contain one ObjectContext
-			return parseToMap(root.getChild(0));			
+			return parseToObject(root.getChild(0));			
 		} else if(root instanceof PairContext) {
 			throw new Exception("PairContext detected");
 		} else if(root instanceof ValueContext) {
 			ValueContext context = (ValueContext) root;
-			logger.info("rule index: " + context.getRuleIndex());
+			//Token token = (Token)root.getPayload();			
+			logger.info("value content payload: " + root.getPayload().getClass());			
 			switch(context.getRuleIndex()) {
 			case JSONParser.RULE_array:
 				List<Object> objects = new ArrayList<Object>();				
 				for(ParseTree childNode : context.array().children) {
-					objects.add(parseToMap(childNode));
+					objects.add(parseToObject(childNode));
 				}
 				parsedObject = objects;
 				break;
 			case JSONParser.RULE_object:
-				parsedObject = parseToMap(context.object());
+				parsedObject = parseToObject(context.object());
 				break;
 			case JSONParser.RULE_value:
-				parsedObject = parseToMap(context.getChild(0));
+				parsedObject = parseToObject(context.getChild(0));
 				break;
 			}
 		} else if(root instanceof ArrayContext) {
@@ -79,11 +81,25 @@ public class JsonFileParser {
 			List<Object> objects = new ArrayList<Object>();				
 			for(ParseTree childNode : context.children) {
 				if(childNode instanceof ValueContext)
-				objects.add(parseToMap(childNode));
+				objects.add(parseToObject(childNode));
 			}
 			parsedObject = objects;
 		} else if(root instanceof TerminalNodeImpl) {
-			parsedObject = root.getText();
+			if(root.getPayload() instanceof Token) {
+				Token token = (Token)root.getPayload();
+				String value = root.getText();				
+				switch(token.getType()) {
+				case JSONParser.LONGSTRING:
+					parsedObject = value.substring(3,value.length() - 3);
+					break;
+				case JSONParser.STRING:
+					parsedObject = value.substring(1,value.length() - 1);
+					break;
+					default:
+						parsedObject = root.getText();		
+				}
+			}
+			logger.info("TerminalNodeImpl payload: " + root.getPayload().getClass());		
 		}		
 		
 		return parsedObject;
